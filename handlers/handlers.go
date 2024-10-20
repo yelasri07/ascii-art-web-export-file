@@ -15,11 +15,12 @@ type Error struct {
 }
 
 type DataAscii struct {
-	Value   string
-	Result  string
-	Banner1 string
-	Banner2 string
-	Banner3 string
+	Value         string
+	Result        string
+	Banner1       string
+	Banner2       string
+	Banner3       string
+	BannerChecked string
 }
 
 func GatherBannerData() *DataAscii {
@@ -42,6 +43,13 @@ func IndexPage(w http.ResponseWriter, r *http.Request) {
 	case "/":
 		if r.Method == http.MethodGet {
 			Data := GatherBannerData()
+			if Data.Banner1 != "" {
+				Data.BannerChecked = "standard"
+			} else if Data.Banner2 != "" {
+				Data.BannerChecked = "shadow"
+			} else if Data.Banner3 != "" {
+				Data.BannerChecked = "thinkertoy"
+			}
 			RenderTemplate(w, "./templates/index.html", Data, http.StatusOK)
 		} else {
 			a := Error{Status: "405", Type: "Method Not Allowed"}
@@ -81,6 +89,7 @@ func AsciiArtPage(w http.ResponseWriter, r *http.Request) {
 
 		Data.Value = text
 		Data.Result = "\n" + result + "\n"
+		Data.BannerChecked = banner
 
 		err := RenderTemplate(w, "./templates/index.html", Data, http.StatusOK)
 		if err != nil {
