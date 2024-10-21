@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"text/template"
 
 	exportfile "exportfile/Functions"
@@ -23,9 +24,13 @@ type DataAscii struct {
 	BannerChecked string
 }
 
-func GatherBannerData() *DataAscii {
-	Data := &DataAscii{}
+var Data DataAscii
+
+func GatherBannerData() {
 	files, _ := os.ReadDir("Files/")
+	Data.Banner1 = ""
+	Data.Banner2 = ""
+	Data.Banner3 = ""
 	for _, file := range files {
 		if file.Name() == "standard.txt" {
 			Data.Banner1 = file.Name()
@@ -35,14 +40,13 @@ func GatherBannerData() *DataAscii {
 			Data.Banner3 = file.Name()
 		}
 	}
-	return Data
 }
 
 func IndexPage(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/":
 		if r.Method == http.MethodGet {
-			Data := GatherBannerData()
+			GatherBannerData()
 			if Data.Banner1 != "" {
 				Data.BannerChecked = "standard"
 			} else if Data.Banner2 != "" {
@@ -50,6 +54,8 @@ func IndexPage(w http.ResponseWriter, r *http.Request) {
 			} else if Data.Banner3 != "" {
 				Data.BannerChecked = "thinkertoy"
 			}
+			Data.Result = ""
+			Data.Value = ""
 			RenderTemplate(w, "./templates/index.html", Data, http.StatusOK)
 		} else {
 			a := Error{Status: "405", Type: "Method Not Allowed"}
@@ -85,8 +91,6 @@ func AsciiArtPage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		Data := GatherBannerData()
-
 		Data.Value = text
 		Data.Result = "\n" + result + "\n"
 		Data.BannerChecked = banner
@@ -102,6 +106,26 @@ func AsciiArtPage(w http.ResponseWriter, r *http.Request) {
 		RenderTemplate(w, "./templates/errorPage.html", a, http.StatusMethodNotAllowed)
 		return
 	}
+}
+
+func ExportHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		if Data.Result != "" {
+			length := strconv.Itoa(len(Data.Result))
+			w.Header().Set("Content-Type", "text/plain")
+			w.Header().Set("Content-Length", length)
+			w.Header().Set("Content-Disposition", "attachment; filename=ascii-art.txt")
+			fmt.Fprint(w, Data.Result)
+			return
+		} else {
+			a := Error{Status: "400", Type: "Bad Request"}
+			RenderTemplate(w, "./templates/errorPage.html", a, http.StatusBadRequest)
+			return
+		}
+	}
+
+	a := Error{Status: "405", Type: "Method Not Allowed"}
+	RenderTemplate(w, "./templates/errorPage.html", a, http.StatusMethodNotAllowed)
 }
 
 func CssHandler(w http.ResponseWriter, r *http.Request) {

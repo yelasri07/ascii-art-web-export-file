@@ -120,7 +120,10 @@
 
   {{if .Result}}
   <div class="output">
-    <pre>{{.Result}}</pre>
+    <div class="output_text">
+      <pre>{{.Result}}</pre>
+    </div>
+    <a href="/export"><i class="fa-solid fa-circle-down"></i></a>
   </div>
   {{end}}
 </body>

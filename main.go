@@ -21,6 +21,7 @@ func main() {
 	http.HandleFunc("/assets/css/", exportfile.CssHandler)
 	http.HandleFunc("/", exportfile.IndexPage)
 	http.HandleFunc("/ascii-art", exportfile.AsciiArtPage)
+	http.HandleFunc("/export",exportfile.ExportHandler)
 	fmt.Println("http://localhost"+port+"/")
 	log.Fatal(http.ListenAndServe(port, nil))
 }
